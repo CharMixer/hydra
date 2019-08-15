@@ -200,8 +200,6 @@ func GetLogin(url string, client *HydraClient, challenge string) (LoginResponse,
     return hydraLoginResponse, err
   }
 
-  fmt.Println(string(responseData));
-
   if response.StatusCode != 200 {
     return hydraLoginResponse, errors.New("Failed to retrive request from login_challenge, " + string(responseData))
   }
