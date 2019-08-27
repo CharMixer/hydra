@@ -145,7 +145,7 @@ func IntrospectToken(introspectUrl string, client *HydraClient, introspectReques
   values.Add("scope", introspectRequest.Scope)
   body := values.Encode()
 
-  request, err := http.NewRequest("POST", introspectUrl, body)
+  request, err := http.NewRequest("POST", introspectUrl, bytes.NewBufferString(body))
   if err != nil {
     return introspectResponse, err
   }
