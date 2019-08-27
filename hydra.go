@@ -107,7 +107,7 @@ type IntrospectRequest struct {
 }
 
 type IntrospectResponse struct {
-  Active string `json:"active"`
+  Active bool `json:"active"`
   Aud string `json:"aud"`
   ClientId string `json:"client_id"`
   Exp string `json:"exp"`
@@ -167,7 +167,7 @@ func IntrospectToken(introspectUrl string, client *HydraClient, introspectReques
     return introspectResponse, nil
   }
 
-  // Deny by default  
+  // Deny by default
   err = fmt.Errorf("Introspect token failed with status code %s", statusCode)
   return introspectResponse, err
 }
