@@ -7,7 +7,7 @@ import (
   "io/ioutil"
   "errors"
   "fmt"
-
+  "net/url"
   "golang.org/x/net/context"
   "golang.org/x/oauth2/clientcredentials"
 )
@@ -135,12 +135,21 @@ func NewHydraClient(config *clientcredentials.Config) *HydraClient {
 func IntrospectToken(url string, client *HydraClient, introspectRequest IntrospectRequest) (IntrospectResponse, error) {
   var introspectResponse IntrospectResponse
 
-  body, _ := json.Marshal(introspectRequest)
+  headers := map[string][]string{
+    "Content-Type": []string{"application/x-www-form-urlencoded"},
+    "Accept": []string{"application/json"},
+  }
+
+  values := url.Values{}
+  values.Add("token", introspectRequest.Token)
+  values.Add("scope", introspectRequest.Scope)
+  body := values.Encode()
 
   request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
   if err != nil {
     return introspectResponse, err
   }
+  req.Header = headers
 
   response, err := client.Do(request)
   if err != nil {
