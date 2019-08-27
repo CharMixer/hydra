@@ -156,13 +156,20 @@ func IntrospectToken(introspectUrl string, client *HydraClient, introspectReques
     return introspectResponse, err
   }
 
-  responseData, err := ioutil.ReadAll(response.Body)
-  if err != nil {
-    return introspectResponse, err
-  }
-  json.Unmarshal(responseData, &introspectResponse)
+  statusCode := response.StatusCode
 
-  return introspectResponse, nil
+  if statusCode == 200 {
+    responseData, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+      return introspectResponse, err
+    }
+    json.Unmarshal(responseData, &introspectResponse)
+    return introspectResponse, nil
+  }
+
+  // Deny by default  
+  err = fmt.Errorf("Introspect token failed with status code %s", statusCode)
+  return introspectResponse, err
 }
 
 // config.Hydra.UserInfoUrl
