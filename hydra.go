@@ -132,7 +132,7 @@ func NewHydraClient(config *clientcredentials.Config) *HydraClient {
 
 // OAUTH FUNC BEGIN
 
-func IntrospectToken(url string, client *HydraClient, introspectRequest IntrospectRequest) (IntrospectResponse, error) {
+func IntrospectToken(introspectUrl string, client *HydraClient, introspectRequest IntrospectRequest) (IntrospectResponse, error) {
   var introspectResponse IntrospectResponse
 
   headers := map[string][]string{
@@ -145,7 +145,7 @@ func IntrospectToken(url string, client *HydraClient, introspectRequest Introspe
   values.Add("scope", introspectRequest.Scope)
   body := values.Encode()
 
-  request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+  request, err := http.NewRequest("POST", introspectUrl, bytes.NewBuffer(body))
   if err != nil {
     return introspectResponse, err
   }
