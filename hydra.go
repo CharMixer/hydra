@@ -34,7 +34,7 @@ type LoginAcceptResponse struct {
 
 // OAuth2 Client BEGIN
 type Oauth2Client struct {
-  ClientId `form:"client_id" json:"client_id,omitempty"`
+  ClientId string `form:"client_id" json:"client_id,omitempty"`
 }
 // Oauth2 Client END
 
