@@ -32,6 +32,12 @@ type LoginAcceptResponse struct {
 
 // LOGIN STRUCT END
 
+// OAuth2 Client BEGIN
+type Oauth2Client struct {
+  ClientId `form:"client_id" json:"client_id,omitempty"`
+}
+// Oauth2 Client END
+
 // CONSENT STRUCT BEGIN
 
 type ConsentResponse struct {
@@ -42,6 +48,7 @@ type ConsentResponse struct {
   RequestUrl                   string                     `json:"request_url"`
   RequestedAccessTokenAudience []string                   `json:"requested_access_token_audience"`
   RequestedScopes              []string                   `json:"requested_scope"`
+  Client                       Oauth2Client               `json:"client"`
 }
 
 type ConsentAcceptSession struct {
