@@ -56,8 +56,8 @@ type ConsentAcceptResponse struct {
 type ConsentAcceptRequest struct {
   Subject                      string                     `json:"subject,omitempty"`
   GrantScope                   []string                   `json:"grant_scope"`
-  Session                      ConsentAcceptSession  `json:"session" binding:"required"`
-  GrantAccessTokenAudience     string                     `json:"grant_access_token_audience,omitempty" binding:"required"`
+  GrantAccessTokenAudience     []string                   `json:"grant_access_token_audience,omitempty"`
+  Session                      ConsentAcceptSession       `json:"session" binding:"required"`
   Remember                     bool                       `json:"remember" binding:"required"`
   RememberFor                  int                        `json:"remember_for" binding:"required"`
 }
