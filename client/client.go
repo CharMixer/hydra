@@ -1,4 +1,4 @@
-package hydra
+package client
 
 import (
   "net/http"
