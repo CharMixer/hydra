@@ -1,8 +1,6 @@
-module github.com/CharMixer/hydra-client
-
-go 1.12
+module github.com/CharMixer/hydra
 
 require (
-	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
+	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 )
