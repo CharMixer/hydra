@@ -112,16 +112,27 @@ type IntrospectRequest struct {
   Scope string `json:"scope"`
 }
 
+// https://www.ory.sh/docs/hydra/sdk/api#schemaoauth2tokenintrospection
 type IntrospectResponse struct {
   Active bool `json:"active"`
-  Aud string `json:"aud"`
+  Aud []string `json:"aud"`
   ClientId string `json:"client_id"`
-  Exp string `json:"exp"`
-  Iat string `json:"iat"`
+  Exp int64 `json:"exp"`
+
+  // Ext ...
+  // "ext": {
+  // "property1": {},
+  // "property2": {}
+  // }
+
+  Iat int64 `json:"iat"`
   Iss string `json:"iss"`
+  Nbf int64 `json:"nbf"`
+  ObfuscatedSubject string `json:"obfuscated_subject"`
   Scope string `json:"scope"`
   Sub string `json:"sub"`
   TokenType string `json:"token_type"`
+  Username string `json:"username"`
 }
 
 // OAUTH2 STRUCT END
