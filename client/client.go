@@ -6,7 +6,6 @@ import (
   "encoding/json"
   "io/ioutil"
   "errors"
-  "fmt"
   "net/url"
   "golang.org/x/net/context"
   "golang.org/x/oauth2/clientcredentials"
@@ -137,6 +136,31 @@ func NewHydraClient(config *clientcredentials.Config) *HydraClient {
   return &HydraClient{client}
 }
 
+func parseResponse(res *http.Response) ([]byte, error) {
+
+  resData, err := ioutil.ReadAll(res.Body)
+  if err != nil {
+    return nil, err
+  }
+
+  switch (res.StatusCode) {
+  case 200:
+    return resData, nil
+  case 400:
+    return nil, errors.New("Bad Request: " + string(resData))
+  case 401:
+    return nil, errors.New("Unauthorized: " + string(resData))
+  case 403:
+    return nil, errors.New("Forbidden: " + string(resData))
+  case 404:
+    return nil, errors.New("Not Found: " + string(resData))
+  case 500:
+    return nil, errors.New("Internal Server Error")
+  default:
+    return nil, errors.New("Unhandled error")
+  }
+}
+
 // OAUTH FUNC BEGIN
 
 func IntrospectToken(introspectUrl string, client *HydraClient, introspectRequest IntrospectRequest) (IntrospectResponse, error) {
@@ -162,21 +186,19 @@ func IntrospectToken(introspectUrl string, client *HydraClient, introspectReques
   if err != nil {
     return introspectResponse, err
   }
+  defer response.Body.Close()
 
-  statusCode := response.StatusCode
-
-  if statusCode == 200 {
-    responseData, err := ioutil.ReadAll(response.Body)
-    if err != nil {
-      return introspectResponse, err
-    }
-    json.Unmarshal(responseData, &introspectResponse)
-    return introspectResponse, nil
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return introspectResponse, err
   }
 
-  // Deny by default
-  err = fmt.Errorf("Introspect token failed with status code %s", statusCode)
-  return introspectResponse, err
+  err = json.Unmarshal(responseData, &introspectResponse)
+  if err != nil {
+    return introspectResponse, err
+  }
+
+  return introspectResponse, nil
 }
 
 // config.Hydra.UserInfoUrl
@@ -189,12 +211,17 @@ func GetUserInfo(url string, client *HydraClient) (UserInfoResponse, error) {
   if err != nil {
     return hydraUserInfoResponse, err
   }
+  defer response.Body.Close()
 
-  responseData, err := ioutil.ReadAll(response.Body)
+  responseData, err := parseResponse(response)
   if err != nil {
     return hydraUserInfoResponse, err
   }
-  json.Unmarshal(responseData, &hydraUserInfoResponse)
+
+  err = json.Unmarshal(responseData, &hydraUserInfoResponse)
+  if err != nil {
+    return hydraUserInfoResponse, err
+  }
 
   return hydraUserInfoResponse, nil
 }
@@ -207,7 +234,10 @@ func GetUserInfo(url string, client *HydraClient) (UserInfoResponse, error) {
 func GetLogin(url string, client *HydraClient, challenge string) (LoginResponse, error) {
   var hydraLoginResponse LoginResponse
 
-  request, _ := http.NewRequest("GET", url, nil)
+  request, err := http.NewRequest("GET", url, nil)
+  if err != nil {
+    return hydraLoginResponse, err
+  }
 
   query := request.URL.Query()
   query.Add("login_challenge", challenge)
@@ -217,38 +247,57 @@ func GetLogin(url string, client *HydraClient, challenge string) (LoginResponse,
   if err != nil {
     return hydraLoginResponse, err
   }
+  defer response.Body.Close()
 
-  responseData, err := ioutil.ReadAll(response.Body)
+  responseData, err := parseResponse(response)
   if err != nil {
     return hydraLoginResponse, err
   }
 
-  if response.StatusCode != 200 {
-    return hydraLoginResponse, errors.New("Failed to retrive request from login_challenge, " + string(responseData))
+  err = json.Unmarshal(responseData, &hydraLoginResponse)
+  if err != nil {
+    return hydraLoginResponse, err
   }
-
-  json.Unmarshal(responseData, &hydraLoginResponse)
 
   return hydraLoginResponse, nil
 }
 
+
 // config.Hydra.LoginRequestAcceptUrl
-func AcceptLogin(url string, client *HydraClient, challenge string, hydraLoginAcceptRequest LoginAcceptRequest) LoginAcceptResponse {
+func AcceptLogin(url string, client *HydraClient, challenge string, hydraLoginAcceptRequest LoginAcceptRequest) (LoginAcceptResponse, error) {
   var hydraLoginAcceptResponse LoginAcceptResponse
 
-  body, _ := json.Marshal(hydraLoginAcceptRequest)
+  body, err := json.Marshal(hydraLoginAcceptRequest)
+  if err != nil {
+    return hydraLoginAcceptResponse, err
+  }
 
-  request, _ := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  request, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  if err != nil {
+    return hydraLoginAcceptResponse, err
+  }
 
   query := request.URL.Query()
   query.Add("login_challenge", challenge)
   request.URL.RawQuery = query.Encode()
 
-  response, _ := client.Do(request)
-  responseData, _ := ioutil.ReadAll(response.Body)
-  json.Unmarshal(responseData, &hydraLoginAcceptResponse)
+  response, err := client.Do(request)
+  if err != nil {
+    return hydraLoginAcceptResponse, err
+  }
+  defer response.Body.Close()
 
-  return hydraLoginAcceptResponse
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return hydraLoginAcceptResponse, err
+  }
+
+  err = json.Unmarshal(responseData, &hydraLoginAcceptResponse)
+  if err != nil {
+    return hydraLoginAcceptResponse, err
+  }
+
+  return hydraLoginAcceptResponse, nil
 }
 
 // LOGIN FUNC END
@@ -260,48 +309,67 @@ func GetConsent(url string, client *HydraClient, challenge string) (ConsentRespo
   var hydraConsentResponse ConsentResponse
   var err error
 
-  request, _ := http.NewRequest("GET", url, nil)
+  request, err := http.NewRequest("GET", url, nil)
+  if err != nil {
+    return hydraConsentResponse, err
+  }
 
   query := request.URL.Query()
   query.Add("consent_challenge", challenge)
   request.URL.RawQuery = query.Encode()
 
-  response, _ := client.Do(request)
+  response, err := client.Do(request)
+  if err != nil {
+    return hydraConsentResponse, err
+  }
+  defer response.Body.Close()
 
-  statusCode := response.StatusCode
-
-  if statusCode == 200 {
-    responseData, _ := ioutil.ReadAll(response.Body)
-    json.Unmarshal(responseData, &hydraConsentResponse)
-    return hydraConsentResponse, nil
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return hydraConsentResponse, err
   }
 
-  // Deny by default
-  if ( statusCode == 404 ) {
-    err = fmt.Errorf("Consent request not found for challenge %s", challenge)
-  } else {
-    err = fmt.Errorf("Consent request failed with status code %d for challenge %s", statusCode, challenge)
+  err = json.Unmarshal(responseData, &hydraConsentResponse)
+  if err != nil {
+    return hydraConsentResponse, err
   }
-  return hydraConsentResponse, err
+
+  return hydraConsentResponse, nil
 }
 
 // config.Hydra.ConsentRequestAcceptUrl
 func AcceptConsent(url string, client *HydraClient, challenge string, hydraConsentAcceptRequest ConsentAcceptRequest) (ConsentAcceptResponse, error) {
   var hydraConsentAcceptResponse ConsentAcceptResponse
 
-  body, _ := json.Marshal(hydraConsentAcceptRequest)
+  body, err := json.Marshal(hydraConsentAcceptRequest)
+  if err != nil {
+    return hydraConsentAcceptResponse, err
+  }
 
-  request, _ := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  request, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  if err != nil {
+    return hydraConsentAcceptResponse, err
+  }
 
   query := request.URL.Query()
   query.Add("consent_challenge", challenge)
   request.URL.RawQuery = query.Encode()
 
-  response, _ := client.Do(request)
+  response, err := client.Do(request)
+  if err != nil {
+    return hydraConsentAcceptResponse, err
+  }
+  defer response.Body.Close()
 
-  responseData, _ := ioutil.ReadAll(response.Body)
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return hydraConsentAcceptResponse, err
+  }
 
-  json.Unmarshal(responseData, &hydraConsentAcceptResponse)
+  err = json.Unmarshal(responseData, &hydraConsentAcceptResponse)
+  if err != nil {
+    return hydraConsentAcceptResponse, err
+  }
 
   return hydraConsentAcceptResponse, nil
 }
@@ -310,19 +378,35 @@ func AcceptConsent(url string, client *HydraClient, challenge string, hydraConse
 func RejectConsent(url string, client *HydraClient, challenge string, hydraConsentRejectRequest ConsentRejectRequest) (ConsentRejectResponse, error) {
   var hydraConsentRejectResponse ConsentRejectResponse
 
-  body, _ := json.Marshal(hydraConsentRejectRequest)
+  body, err := json.Marshal(hydraConsentRejectRequest)
+  if err != nil {
+    return hydraConsentRejectResponse, err
+  }
 
-  request, _ := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  request, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  if err != nil {
+    return hydraConsentRejectResponse, err
+  }
 
   query := request.URL.Query()
   query.Add("consent_challenge", challenge)
   request.URL.RawQuery = query.Encode()
 
-  response, _ := client.Do(request)
+  response, err := client.Do(request)
+  if err != nil {
+    return hydraConsentRejectResponse, err
+  }
+  defer response.Body.Close()
 
-  responseData, _ := ioutil.ReadAll(response.Body)
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return hydraConsentRejectResponse, err
+  }
 
-  json.Unmarshal(responseData, &hydraConsentRejectResponse)
+  err = json.Unmarshal(responseData, &hydraConsentRejectResponse)
+  if err != nil {
+    return hydraConsentRejectResponse, err
+  }
 
   return hydraConsentRejectResponse, nil
 }
@@ -335,7 +419,10 @@ func RejectConsent(url string, client *HydraClient, challenge string, hydraConse
 func GetLogout(url string, client *HydraClient, challenge string) (LogoutResponse, error) {
   var hydraLogoutResponse LogoutResponse
 
-  request, _ := http.NewRequest("GET", url, nil)
+  request, err := http.NewRequest("GET", url, nil)
+  if err != nil {
+    return hydraLogoutResponse, err
+  }
 
   query := request.URL.Query()
   query.Add("logout_challenge", challenge)
@@ -345,10 +432,17 @@ func GetLogout(url string, client *HydraClient, challenge string) (LogoutRespons
   if err != nil {
     return hydraLogoutResponse, err
   }
+  defer response.Body.Close()
 
-  responseData, _ := ioutil.ReadAll(response.Body)
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return hydraLogoutResponse, err
+  }
 
-  json.Unmarshal(responseData, &hydraLogoutResponse)
+  err = json.Unmarshal(responseData, &hydraLogoutResponse)
+  if err != nil {
+    return hydraLogoutResponse, err
+  }
 
   return hydraLogoutResponse, nil
 }
@@ -357,18 +451,35 @@ func GetLogout(url string, client *HydraClient, challenge string) (LogoutRespons
 func AcceptLogout(url string, client *HydraClient, challenge string, hydraLogoutAcceptRequest LogoutAcceptRequest) (LogoutAcceptResponse, error) {
   var hydraLogoutAcceptResponse LogoutAcceptResponse
 
-  body, _ := json.Marshal(hydraLogoutAcceptRequest)
+  body, err := json.Marshal(hydraLogoutAcceptRequest)
+  if err != nil {
+    return hydraLogoutAcceptResponse, err
+  }
 
-  request, _ := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  request, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  if err != nil {
+    return hydraLogoutAcceptResponse, err
+  }
 
   query := request.URL.Query()
   query.Add("logout_challenge", challenge)
   request.URL.RawQuery = query.Encode()
 
-  response, _ := client.Do(request)
+  response, err := client.Do(request)
+  if err != nil {
+    return hydraLogoutAcceptResponse, err
+  }
+  defer response.Body.Close()
 
-  responseData, _ := ioutil.ReadAll(response.Body)
-  json.Unmarshal(responseData, &hydraLogoutAcceptResponse)
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return hydraLogoutAcceptResponse, err
+  }
+
+  err = json.Unmarshal(responseData, &hydraLogoutAcceptResponse)
+  if err != nil {
+    return hydraLogoutAcceptResponse, err
+  }
 
   return hydraLogoutAcceptResponse, nil
 }
