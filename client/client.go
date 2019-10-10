@@ -20,9 +20,10 @@ type LoginResponse struct {
 }
 
 type LoginAcceptRequest struct {
-  Subject     string      `json:"subject"`
-  Remember    bool        `json:"remember,omitempty"`
+  Subject     string    `json:"subject" validate:"required"`
+  Remember    bool      `json:"remember,omitempty"`
   RememberFor int       `json:"remember_for,omitempty"`
+  ACR         string    `json:"acr,omitempty"`
 }
 
 type LoginAcceptResponse struct {
