@@ -9,6 +9,8 @@ import (
   "net/url"
   "golang.org/x/net/context"
   "golang.org/x/oauth2/clientcredentials"
+  "fmt"
+  "time"
 )
 
 // LOGIN STRUCT BEGIN
@@ -178,16 +180,17 @@ func parseResponse(res *http.Response) ([]byte, error) {
 func IntrospectToken(introspectUrl string, client *HydraClient, introspectRequest IntrospectRequest) (IntrospectResponse, error) {
   var introspectResponse IntrospectResponse
 
-  headers := map[string][]string{
-    "Content-Type": []string{"application/x-www-form-urlencoded"},
-    "Accept": []string{"application/json"},
-  }
+  //headers := map[string][]string{
+    //"Content-Type": []string{"application/x-www-form-urlencoded"},
+    //"Accept": []string{"application/json"},
+  //}
 
   values := url.Values{}
   values.Add("token", introspectRequest.Token)
   values.Add("scope", introspectRequest.Scope)
   body := values.Encode()
 
+  /*
   request, err := http.NewRequest("POST", introspectUrl, bytes.NewBufferString(body))
   if err != nil {
     return introspectResponse, err
@@ -195,6 +198,13 @@ func IntrospectToken(introspectUrl string, client *HydraClient, introspectReques
   request.Header = headers
 
   response, err := client.Do(request)
+  if err != nil {
+    return introspectResponse, err
+  }
+  defer response.Body.Close()
+*/
+
+  response, err := http.Post(introspectUrl, "application/x-www-form-urlencoded", bytes.NewBufferString(body))
   if err != nil {
     return introspectResponse, err
   }
