@@ -9,8 +9,6 @@ import (
   "net/url"
   "golang.org/x/net/context"
   "golang.org/x/oauth2/clientcredentials"
-  "fmt"
-  "time"
 )
 
 // LOGIN STRUCT BEGIN
