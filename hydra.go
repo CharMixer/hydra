@@ -24,6 +24,7 @@ func main() {
     TokenURL:     provider.Endpoint().TokenURL,
     Scopes:       []string{"openid"},
     EndpointParams: url.Values{"audience": {"hydra"}},
+    AuthStyle: 2, // https://godoc.org/golang.org/x/oauth2#AuthStyle
   }
 
   _ = client.NewHydraClient(hydraConfig)
