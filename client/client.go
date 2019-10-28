@@ -178,29 +178,10 @@ func parseResponse(res *http.Response) ([]byte, error) {
 func IntrospectToken(introspectUrl string, client *HydraClient, introspectRequest IntrospectRequest) (IntrospectResponse, error) {
   var introspectResponse IntrospectResponse
 
-  //headers := map[string][]string{
-    //"Content-Type": []string{"application/x-www-form-urlencoded"},
-    //"Accept": []string{"application/json"},
-  //}
-
   values := url.Values{}
   values.Add("token", introspectRequest.Token)
   values.Add("scope", introspectRequest.Scope)
   body := values.Encode()
-
-  /*
-  request, err := http.NewRequest("POST", introspectUrl, bytes.NewBufferString(body))
-  if err != nil {
-    return introspectResponse, err
-  }
-  request.Header = headers
-
-  response, err := client.Do(request)
-  if err != nil {
-    return introspectResponse, err
-  }
-  defer response.Body.Close()
-*/
 
   response, err := http.Post(introspectUrl, "application/x-www-form-urlencoded", bytes.NewBufferString(body))
   if err != nil {
@@ -505,3 +486,54 @@ func AcceptLogout(url string, client *HydraClient, challenge string, hydraLogout
 }
 
 // LOGOUT FUNC END
+
+
+// CLIENTS FUNC BEGIN
+
+type Client struct {
+  Id string `json:"client_id"`
+  Name string `json:"client_name"`
+  Secret string `json:"client_secret"`
+  Scope string `json:"scope"`
+  GrantTypes []string `json:"grant_types"`
+  Audience []string `json:"audience"`
+  ResponseTypes []string `json:"response_types"`
+  RedirectUris []string `json:"redirect_uris"`
+  TokenEndpointAuthMethod string `json:"token_endpoint_auth_method"`
+  PostLogoutRedirectUris []string `json:"post_logout_redirect_uris"`
+}
+
+type CreateClientRequest Client
+type CreateClientResponse Client
+
+func CreateClient(client *HydraClient, url string, createClientRequest CreateClientRequest) (createClientResponse CreateClientResponse, err error) {
+  body, err := json.Marshal(createClientRequest)
+  if err != nil {
+    return CreateClientResponse{}, err
+  }
+
+  request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+  if err != nil {
+    return CreateClientResponse{}, err
+  }
+
+  response, err := client.Do(request)
+  if err != nil {
+    return CreateClientResponse{}, err
+  }
+  defer response.Body.Close()
+
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return CreateClientResponse{}, err
+  }
+
+  err = json.Unmarshal(responseData, &createClientResponse)
+  if err != nil {
+    return CreateClientResponse{}, err
+  }
+
+  return createClientResponse, nil
+}
+
+// CLIENTS FUNC END
