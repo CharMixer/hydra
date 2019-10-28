@@ -510,22 +510,16 @@ func AcceptLogout(url string, client *HydraClient, challenge string, hydraLogout
 
 // CLIENTS FUNC BEGIN
 
-func CreateClient(client *HydraClient, url string, createClientRequest CreateClientRequest) (createClientResponse CreateClientResponse, err error) {
+func CreateClient(url string, createClientRequest CreateClientRequest) (createClientResponse CreateClientResponse, err error) {
   body, err := json.Marshal(createClientRequest)
   if err != nil {
     return CreateClientResponse{}, err
   }
 
-  request, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+  response, err := http.Post(url, "application/json", bytes.NewBuffer(body))
   if err != nil {
     return CreateClientResponse{}, err
   }
-
-  response, err := client.Do(request)
-  if err != nil {
-    return CreateClientResponse{}, err
-  }
-  defer response.Body.Close()
 
   responseData, err := parseResponse(response)
   if err != nil {
