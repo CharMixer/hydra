@@ -38,6 +38,26 @@ type Oauth2Client struct {
 }
 // Oauth2 Client END
 
+// CLIENT STRUCTS BEGIN
+
+type Client struct {
+  Id string `json:"client_id"`
+  Name string `json:"client_name"`
+  Secret string `json:"client_secret"`
+  Scope string `json:"scope"`
+  GrantTypes []string `json:"grant_types"`
+  Audience []string `json:"audience"`
+  ResponseTypes []string `json:"response_types"`
+  RedirectUris []string `json:"redirect_uris"`
+  TokenEndpointAuthMethod string `json:"token_endpoint_auth_method"`
+  PostLogoutRedirectUris []string `json:"post_logout_redirect_uris"`
+}
+
+type CreateClientRequest Client
+type CreateClientResponse Client
+
+// CLIENT STRUCTS END
+
 // CONSENT STRUCT BEGIN
 
 type ConsentResponse struct {
@@ -489,22 +509,6 @@ func AcceptLogout(url string, client *HydraClient, challenge string, hydraLogout
 
 
 // CLIENTS FUNC BEGIN
-
-type Client struct {
-  Id string `json:"client_id"`
-  Name string `json:"client_name"`
-  Secret string `json:"client_secret"`
-  Scope string `json:"scope"`
-  GrantTypes []string `json:"grant_types"`
-  Audience []string `json:"audience"`
-  ResponseTypes []string `json:"response_types"`
-  RedirectUris []string `json:"redirect_uris"`
-  TokenEndpointAuthMethod string `json:"token_endpoint_auth_method"`
-  PostLogoutRedirectUris []string `json:"post_logout_redirect_uris"`
-}
-
-type CreateClientRequest Client
-type CreateClientResponse Client
 
 func CreateClient(client *HydraClient, url string, createClientRequest CreateClientRequest) (createClientResponse CreateClientResponse, err error) {
   body, err := json.Marshal(createClientRequest)
