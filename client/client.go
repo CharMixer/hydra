@@ -534,4 +534,27 @@ func CreateClient(url string, createClientRequest CreateClientRequest) (createCl
   return createClientResponse, nil
 }
 
+func DeleteClient(url string, deleteClient string) (err error) {
+  client := &http.Client{}
+
+  url = url + "/" + deleteClient
+
+  request, err := http.NewRequest("DELETE", url, nil)
+  if err != nil {
+    return err
+  }
+
+  response, err := client.Do(request)
+  if err != nil {
+    return err
+  }
+
+  _, err = parseResponse(response)
+  if err != nil {
+    return err
+  }
+
+  return nil
+}
+
 // CLIENTS FUNC END
