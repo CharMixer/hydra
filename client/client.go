@@ -24,6 +24,7 @@ type LoginAcceptRequest struct {
   Remember    bool      `json:"remember,omitempty"`
   RememberFor int       `json:"remember_for,omitempty"`
   ACR         string    `json:"acr,omitempty"`
+  Context     map[string]string `json:"context,omitempty"`
 }
 
 type LoginAcceptResponse struct {
@@ -72,6 +73,7 @@ type ConsentResponse struct {
   RequestedAccessTokenAudience []string                   `json:"requested_access_token_audience"`
   RequestedScopes              []string                   `json:"requested_scope"`
   Client                       Oauth2Client               `json:"client"`
+  Context                      map[string]string          `json:"context"`
 }
 
 type ConsentAcceptSession struct {
