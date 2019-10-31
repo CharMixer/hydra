@@ -42,20 +42,23 @@ type Oauth2Client struct {
 // CLIENT STRUCTS BEGIN
 
 type Client struct {
-  Id string `json:"client_id"`
-  Name string `json:"client_name"`
-  Secret string `json:"client_secret"`
-  Scope string `json:"scope"`
-  GrantTypes []string `json:"grant_types"`
-  Audience []string `json:"audience"`
-  ResponseTypes []string `json:"response_types"`
-  RedirectUris []string `json:"redirect_uris"`
-  TokenEndpointAuthMethod string `json:"token_endpoint_auth_method"`
-  PostLogoutRedirectUris []string `json:"post_logout_redirect_uris"`
+  Id string `json:"client_id,omitempty"`
+  Name string `json:"client_name,omitempty"`
+  Secret string `json:"client_secret,omitempty"`
+  Scope string `json:"scope,omitempty"`
+  GrantTypes []string `json:"grant_types,omitempty"`
+  Audience []string `json:"audience,omitempty"`
+  ResponseTypes []string `json:"response_types,omitempty"`
+  RedirectUris []string `json:"redirect_uris,omitempty"`
+  TokenEndpointAuthMethod string `json:"token_endpoint_auth_method,omitempty"`
+  PostLogoutRedirectUris []string `json:"post_logout_redirect_uris,omitempty"`
 }
 
 type CreateClientRequest Client
 type CreateClientResponse Client
+
+type UpdateClientRequest Client
+type UpdateClientResponse Client
 
 // CLIENT STRUCTS END
 
@@ -534,6 +537,30 @@ func CreateClient(url string, createClientRequest CreateClientRequest) (createCl
   }
 
   return createClientResponse, nil
+}
+
+func UpdateClient(url string, updateClientRequest UpdateClientRequest) (updateClientResponse UpdateClientResponse, err error) {
+  body, err := json.Marshal(updateClientRequest)
+  if err != nil {
+    return UpdateClientResponse{}, err
+  }
+
+  response, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+  if err != nil {
+    return UpdateClientResponse{}, err
+  }
+
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return UpdateClientResponse{}, err
+  }
+
+  err = json.Unmarshal(responseData, &updateClientResponse)
+  if err != nil {
+    return UpdateClientResponse{}, err
+  }
+
+  return updateClientResponse, nil
 }
 
 func DeleteClient(url string, deleteClient string) (err error) {
