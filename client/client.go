@@ -541,12 +541,19 @@ func CreateClient(url string, createClientRequest CreateClientRequest) (createCl
 }
 
 func UpdateClient(url string, updateClientRequest UpdateClientRequest) (updateClientResponse UpdateClientResponse, err error) {
+  client := &http.Client{}
+
   body, err := json.Marshal(updateClientRequest)
   if err != nil {
     return UpdateClientResponse{}, err
   }
 
-  response, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+  request, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  if err != nil {
+    return UpdateClientResponse{}, err
+  }
+
+  response, err := client.Do(request)
   if err != nil {
     return UpdateClientResponse{}, err
   }
