@@ -60,6 +60,8 @@ type CreateClientResponse Client
 type UpdateClientRequest Client
 type UpdateClientResponse Client
 
+type ReadClientResponse Client
+
 // CLIENT STRUCTS END
 
 // CONSENT STRUCT BEGIN
@@ -570,10 +572,10 @@ func UpdateClient(url string, updateClientRequest UpdateClientRequest) (updateCl
   return updateClientResponse, nil
 }
 
-func DeleteClient(url string, deleteClient string) (err error) {
+func DeleteClient(url string, client_id string) (err error) {
   client := &http.Client{}
 
-  url = url + "/" + deleteClient
+  url = url + "/" + client_id
 
   request, err := http.NewRequest("DELETE", url, nil)
   if err != nil {
@@ -591,6 +593,34 @@ func DeleteClient(url string, deleteClient string) (err error) {
   }
 
   return nil
+}
+
+func ReadClient(url string, client_id string) (readClientResponse ReadClientResponse, err error) {
+  client := &http.Client{}
+
+  url = url + "/" + client_id
+
+  request, err := http.NewRequest("GET", url, nil)
+  if err != nil {
+    return ReadClientResponse{},err
+  }
+
+  response, err := client.Do(request)
+  if err != nil {
+    return ReadClientResponse{}, err
+  }
+
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return ReadClientResponse{}, err
+  }
+
+  err = json.Unmarshal(responseData, &readClientResponse)
+  if err != nil {
+    return ReadClientResponse{}, err
+  }
+
+  return readClientResponse, nil
 }
 
 // CLIENTS FUNC END
