@@ -17,6 +17,7 @@ type LoginResponse struct {
   Skip        bool        `json:"skip"`
   RedirectTo  string      `json:"redirect_to"`
   Subject     string      `json:"subject"`
+  Client      Oauth2Client `json:"client"`
 }
 
 type LoginAcceptRequest struct {
