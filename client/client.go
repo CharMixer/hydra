@@ -542,8 +542,10 @@ func CreateClient(url string, createClientRequest CreateClientRequest) (createCl
   return createClientResponse, nil
 }
 
-func UpdateClient(url string, updateClientRequest UpdateClientRequest) (updateClientResponse UpdateClientResponse, err error) {
+func UpdateClient(url string, client_id string, updateClientRequest UpdateClientRequest) (updateClientResponse UpdateClientResponse, err error) {
   client := &http.Client{}
+
+  url = url + "/" + client_id
 
   body, err := json.Marshal(updateClientRequest)
   if err != nil {
