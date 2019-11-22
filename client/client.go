@@ -689,7 +689,8 @@ func ReadClient(url string, client_id string) (readClientResponse ReadClientResp
 
 // SESSION FUNC BEGIN
 // config.Hydra.LogoutRequestAcceptUrl
-func DeleteLoginSessions(url string, client *HydraClient, deleteLoginSessionsRequest DeleteLoginSessionRequest) (deleteLoginSessionsResponse DeleteLoginSessionResponse, err error) {
+func DeleteLoginSessions(url string, client *HydraClient, deleteLoginSessionsRequest DeleteLoginSessionRequest) (DeleteLoginSessionResponse, error) {
+  var deleteLoginSessionsResponse DeleteLoginSessionResponse
 
   request, err := http.NewRequest("DELETE", url, nil)
   if err != nil {
