@@ -32,6 +32,17 @@ type LoginAcceptResponse struct {
   RedirectTo  string      `json:"redirect_to"`
 }
 
+type LoginRejectResponse struct {
+  RedirectTo  string      `json:"redirect_to"`
+}
+type LoginRejectRequest struct {
+  Error            string `json:"error,omitempty"`
+  ErrorDebug       string `json:"error_debug,omitempty"`
+  ErrorDescription string `json:"error_description,omitempty"`
+  ErrorHint        string `json:"error_hint,omitempty"`
+  StatusCode       int64 `json:"status_code,omitempty"`
+}
+
 // LOGIN STRUCT END
 
 // OAuth2 Client BEGIN
@@ -165,6 +176,18 @@ type IntrospectResponse struct {
 }
 
 // OAUTH2 STRUCT END
+
+// SESSION STRUCT BEGIN
+type DeleteLoginSessionResponse struct {
+  Debug            string `json:"debug"`
+  Error            string `json:"error"`
+  ErrorDescription string `json:"error_description"`
+  StatusCode       int64  `json:"status_code"`
+}
+type DeleteLoginSessionRequest struct {
+  Subject string `json:"subject"`
+}
+// SESSION STRUCT END
 
 type HydraClient struct {
   *http.Client
@@ -327,6 +350,42 @@ func AcceptLogin(url string, client *HydraClient, challenge string, hydraLoginAc
   }
 
   return hydraLoginAcceptResponse, nil
+}
+
+// config.Hydra.LoginRequestRejectUrl
+func RejectLogin(url string, client *HydraClient, challenge string, hydraLoginAcceptRequest LoginRejectRequest) (hydraLoginRejectResponse LoginRejectResponse, err error) {
+
+  body, err := json.Marshal(hydraLoginAcceptRequest)
+  if err != nil {
+    return hydraLoginRejectResponse, err
+  }
+
+  request, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+  if err != nil {
+    return hydraLoginRejectResponse, err
+  }
+
+  query := request.URL.Query()
+  query.Add("login_challenge", challenge)
+  request.URL.RawQuery = query.Encode()
+
+  response, err := client.Do(request)
+  if err != nil {
+    return hydraLoginRejectResponse, err
+  }
+  defer response.Body.Close()
+
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return hydraLoginRejectResponse, err
+  }
+
+  err = json.Unmarshal(responseData, &hydraLoginRejectResponse)
+  if err != nil {
+    return hydraLoginRejectResponse, err
+  }
+
+  return hydraLoginRejectResponse, nil
 }
 
 // LOGIN FUNC END
@@ -627,3 +686,36 @@ func ReadClient(url string, client_id string) (readClientResponse ReadClientResp
 }
 
 // CLIENTS FUNC END
+
+// SESSION FUNC BEGIN
+// config.Hydra.LogoutRequestAcceptUrl
+func DeleteLoginSessions(url string, client *HydraClient, deleteLoginSessionsRequest DeleteLoginSessionRequest) (deleteLoginSessionsResponse DeleteLoginSessionResponse, err error) {
+
+  request, err := http.NewRequest("DELETE", url, nil)
+  if err != nil {
+    return deleteLoginSessionsResponse, err
+  }
+
+  query := request.URL.Query()
+  query.Add("subject", deleteLoginSessionsRequest.Subject)
+  request.URL.RawQuery = query.Encode()
+
+  response, err := client.Do(request)
+  if err != nil {
+    return deleteLoginSessionsResponse, err
+  }
+  defer response.Body.Close()
+
+  responseData, err := parseResponse(response)
+  if err != nil {
+    return deleteLoginSessionsResponse, err
+  }
+
+  err = json.Unmarshal(responseData, &deleteLoginSessionsResponse)
+  if err != nil {
+    return deleteLoginSessionsResponse, err
+  }
+
+  return deleteLoginSessionsResponse, nil
+}
+// SESSION FUNC END
