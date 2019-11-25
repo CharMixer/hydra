@@ -209,6 +209,8 @@ func parseResponse(res *http.Response) ([]byte, error) {
   switch (res.StatusCode) {
   case 200:
     return resData, nil
+  case 201:
+    return resData, nil
   case 400:
     return nil, errors.New("Bad Request: " + string(resData))
   case 401:
